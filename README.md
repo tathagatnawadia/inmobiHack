@@ -1,2 +1,0 @@
-# inmobiHack
-InmobiHack day Experiment

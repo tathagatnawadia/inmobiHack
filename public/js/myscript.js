@@ -3,18 +3,17 @@ var email;
 var isActive;
 var defaultFontSize;
 var url=window.location.href;
-
+var pollInterval = 100;
 /*** End of global variable ***/
 
 /*** Helper functions ***/
 function getDivContents(unavailableDivs){
     var texts = [];
     $(unavailableDivs).each(function(){
-        $('[trIdentifier="'+this.toString()+'"]').find('*').each(function(){
-            texts.push({
-                "content":$(this).text(),
-                "fontSize": $(this).css('font-size')
-            });
+        texts.push({
+          "articleId":this.toString(),
+          "content":$("[trIdentifier='"+this.toString()+"']").text(),
+          "fontSize": $("[trIdentifier='"+this.toString()+"']").css('font-size')
         });
     });
     return texts;
@@ -55,19 +54,28 @@ $( document ).ready(function() {
     userInfo['url'] = url;
     socket.emit("signIn", userInfo);
     
-    //One time event to get all trChecks
+    
+    
+    
+    
+    /*
+    One time bootstrap
+    */
     var allIdentifiers =[];
     $('.trCheck').each(function(){
+        $(this).attr('visible', "false");
+        $(this).attr('visibleTime', "0");
         allIdentifiers.push($(this).attr('trIdentifier'));
     });
+    
     var allElements = {
         identifiers: allIdentifiers,
         email: email,
         url: url
     };
-    console.log(allElements);
     socket.emit("allElements", allElements);
-    socket.on("response", function(unavailableDivs){
+    
+    socket.on("allElementsResponse", function(unavailableDivs){
         var content = getDivContents(unavailableDivs);
         var sendObj = {
             email: email,
@@ -76,21 +84,31 @@ $( document ).ready(function() {
         };
         sendObj.url = url;
         socket.emit("divContent", sendObj);
-    });
+    });    
     window.setInterval(function(){
-        var obj = {};
-        obj.email = email;
-        var identifier = [];
         if(window.isActive){
             $('.trCheck').each(function(){
                 if($(this).visible(false, true,'both')){
-                    identifier.push($(this).attr('trIdentifier'));
+                    $(this).attr("visible", "true");
+                    var newTime = parseInt($(this).attr("visibleTime")) + pollInterval;
+                    $(this).attr("visibleTime", newTime+"");
+                }
+                else{
+                    if($(this).attr('visible') === "true"){
+                        var obj = {
+                            url: url,
+                            email: email,
+                            identifier: $(this).attr("trIdentifier"),
+                            visibleTime: $(this).attr("visibleTime")
+                        };
+                        console.log(obj);
+                        socket.emit("screenChange", obj);
+                    }
+                    $(this).attr('visible', "false");
+                    $(this).attr('visibleTime', "0");
                 }
             });
-            obj.visibleDivs = removeDuplicates(identifier);
-            obj.url = url;
-            socket.emit("trackerEvent", obj);
-            console.log(obj);
         }
-    }, 1000);
+    }, pollInterval);
+    
 });

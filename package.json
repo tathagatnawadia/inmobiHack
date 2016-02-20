@@ -10,6 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.13.4",
-    "socket.io": "^1.4.5"
+    "keyword-extractor": "0.0.12",
+    "socket.io": "^1.4.5",
+    "wordcount": "^1.1.1"
   }
 }
