@@ -54,7 +54,30 @@ $( document ).ready(function() {
     userInfo['email'] = email;
     userInfo['url'] = url;
     socket.emit("signIn", userInfo);
-    var intervalID = window.setInterval(function(){
+    
+    //One time event to get all trChecks
+    var allIdentifiers =[];
+    $('.trCheck').each(function(){
+        allIdentifiers.push($(this).attr('trIdentifier'));
+    });
+    var allElements = {
+        identifiers: allIdentifiers,
+        email: email,
+        url: url
+    };
+    console.log(allElements);
+    socket.emit("allElements", allElements);
+    socket.on("response", function(unavailableDivs){
+        var content = getDivContents(unavailableDivs);
+        var sendObj = {
+            email: email,
+            defaultFontSize: defaultFontSize,
+            content: content
+        };
+        sendObj.url = url;
+        socket.emit("divContent", sendObj);
+    });
+    window.setInterval(function(){
         var obj = {};
         obj.email = email;
         var identifier = [];
@@ -68,16 +91,6 @@ $( document ).ready(function() {
             obj.url = url;
             socket.emit("trackerEvent", obj);
             console.log(obj);
-            socket.on("response", function(unavailableDivs){
-                var content = getDivContents(unavailableDivs);
-                var sendObj = {
-                    email: email,
-                    defaultFontSize: defaultFontSize,
-                    content: content
-                };
-                sendObj.url = url;
-                socket.emit("divContent", sendObj);
-            });
         }
     }, 1000);
 });
