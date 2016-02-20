@@ -1,92 +1,77 @@
-var express = require("express"); //AIM 1
-var http = require("http"); //AIM 2
-var util = require("util"); //AIM 3
+var express = require("express"); 
+var http = require("http");
+var util = require("util");
+var MongoClient = require("mongodb").MongoClient; 
+var assert = require("assert");
+var PythonShell = require('python-shell');
 
-
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-// AIM 1 : Prepare a http server with express
-//-------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-//Difference between polling and sockets
-var app = express();
-var server = http.createServer(app);
-
-//Static files middleware
-app.use(express.static("./public"));
-
-server.listen(3000);
-*/
-
-//************************************************************************************************************************************
-
-
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-// AIM 2 : Install the socket.io npm module and make basic chat app
-//-------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-//$npm install socket.io --save
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 app.use(express.static("./public"));
 
-io.on('connection', function(socket){
-	console.log('a user connected');
-	socket.on('chat message', function(msg){
-		console.log('message: ' + msg);
-		io.emit('chat message', msg);
-	});
-	socket.on('disconnect', function(){
-		console.log('user disconnected');
-	});
-});
-server.listen(3000, function(){
-	console.log('listening on *:3000');
-});
+/*
+Establishing Mongo Connection
+*/
+
+var dbHost = 'mongodb://localhost:27017/inmobi';
+var usersCollection = 'users';
+
+
+/*
+Running Python Script Tagger from here
 */
 
 
-//************************************************************************************************************************************
-
-
-//-------------------------------------------------------------------------------------------------------------------------------------
-// AIM 3 : Adding a few things to the app
-//-------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-var app = express();
-var server = http.createServer(app);
-var io = require('socket.io')(server);
-
-app.use(express.static("./public"));
-
-io.on('connection', function(socket){
-	socket.on('introduce', function (name) {
-		util.log(name + " just connected !!");
+function generateTags(text){
+	var tags;
+	var options = {
+		args: [text]
+	};
+	PythonShell.run('taggers/tagger.py', options,function (err, results) {
+		if (err) {			
+		}
+		tags = results;
 	});
-	socket.on('chat message', function(name,msg){
-		util.log('Tracing :: '+ name + " :: " + msg);
-		io.emit('chat message',name,msg);
+	return tags;
+}
+
+
+
+io.on('connection', function(socket,db){
+	
+	/*
+	Various event listeners for the app
+	*/
+	socket.on('signIn', function (obj) {
+		var email = obj.email;
+		var latitude = obj.latitude;
+		var longitude = obj.longitude;
+		util.log(email + " just connected !!");
+		//Add code for inserting or updating user
+			MongoClient.connect(dbHost, function (err,db) {
+				assert.equal(null, err);
+				db.collection(usersCollection).insert({'email':email,'latitude':latitude,'longitude':longitude});
+				db.close();
+			});
 	});
-	socket.on('creepy', function (name,msg) {
-		util.log('Creeping :: '+ name + " :: " + msg);
-	})
+	
+	socket.on('bootstrap', function (articleList) {
+		
+	});
+	
+	/*
+	User closes an app
+	*/
 	socket.on('disconnect', function(){
 		util.log('user disconnected');
 	});
+	
 });
 server.listen(3000, function(){
-	console.log('listening on *:3000');
+	console.log('News Digest Starting on *:3000');
 });
-*/
 
-//************************************************************************************************************************************
 
 
