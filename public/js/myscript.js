@@ -14,9 +14,8 @@ $( document ).ready(function() {
     var headLines = [];
     $('.box').each(function(){
         var temp = $(this).find('h3')[0];
-        headLines.push($(temp).text());
+        headLines.push(temp.firstChild);
     });
-    console.log(headLines)
     socket.emit("headLines", headLines);
 });
 
