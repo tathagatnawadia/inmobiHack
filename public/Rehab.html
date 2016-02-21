@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <title>Rehab (Rihanna song) - Wikipedia, the free encyclopedia</title>
 <script>document.documentElement.className = document.documentElement.className.replace( /(^|\s)client-nojs(\s|$)/, "$1client-js$2" );</script>
+<link rel="stylesheet" type="text/css" href="css/normalize.css" />
+<link rel="stylesheet" type="text/css" href="css/demo.css" />
+<link rel="stylesheet" type="text/css" href="css/ns-default.css" />
+<link rel="stylesheet" type="text/css" href="css/ns-style-growl.css" />
+<script src="js/modernizr.custom.js"></script>
 <script>(window.RLQ = window.RLQ || []).push(function () {
 mw.config.set({"wgCanonicalNamespace":"","wgCanonicalSpecialPageName":false,"wgNamespaceNumber":0,"wgPageName":"Rehab_(Rihanna_song)","wgTitle":"Rehab (Rihanna song)","wgCurRevisionId":705959240,"wgRevisionId":705959240,"wgArticleId":13407760,"wgIsArticle":true,"wgIsRedirect":false,"wgAction":"view","wgUserName":null,"wgUserGroups":["*"],"wgCategories":["CS1 German-language sources (de)","CS1 Dutch-language sources (nl)","CS1 Norwegian-language sources (no)","CS1 Slovak-language sources (sk)","CS1 French-language sources (fr)","CS1 Czech-language sources (cs)","CS1 Finnish-language sources (fi)","CS1 Hungarian-language sources (hu)","CS1 Danish-language sources (da)","CS1 Italian-language sources (it)","CS1 Portuguese-language sources (pt)","CS1 Spanish-language sources (es)","Certification Table Entry usages for Denmark","Certification Table Entry usages for New Zealand","Certification Table Entry usages for United Kingdom","Certification Table Entry usages for United States","Featured articles","2007 songs","2008 singles","2009 singles","Rihanna songs","Song recordings produced by Timbaland","Music videos directed by Anthony Mandler","Pop ballads","Rhythm and blues ballads","Songs written by Justin Timberlake","Songs written by Timbaland","Song recordings produced by Justin Timberlake"],"wgBreakFrames":false,"wgPageContentLanguage":"en","wgPageContentModel":"wikitext","wgSeparatorTransformTable":["",""],"wgDigitTransformTable":["",""],"wgDefaultDateFormat":"dmy","wgMonthNames":["","January","February","March","April","May","June","July","August","September","October","November","December"],"wgMonthNamesShort":["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"wgRelevantPageName":"Rehab_(Rihanna_song)","wgRelevantArticleId":13407760,"wgIsProbablyEditable":true,"wgRestrictionEdit":[],"wgRestrictionMove":["sysop"],"wgWikiEditorEnabledModules":{"toolbar":true,"dialogs":true,"preview":false,"publish":false},"wgBetaFeaturesFeatures":[],"wgMediaViewerOnClick":true,"wgMediaViewerEnabledByDefault":true,"wgVisualEditor":{"pageLanguageCode":"en","pageLanguageDir":"ltr","usePageImages":true,"usePageDescriptions":true},"wikilove-recipient":"","wikilove-anon":0,"wgGatherShouldShowTutorial":true,"wgGatherEnableSample":0,"wgGatherPageImageThumbnail":"//upload.wikimedia.org/wikipedia/en/thumb/a/aa/Rihanna_-_Rehab.png/100px-Rihanna_-_Rehab.png","wgRelatedArticles":null,"wgRelatedArticlesUseCirrusSearch":true,"wgRelatedArticlesOnlyUseCirrusSearch":false,"wgULSAcceptLanguageList":["en-us","en"],"wgULSCurrentAutonym":"English","wgFlaggedRevsParams":{"tags":{"status":{"levels":1,"quality":2,"pristine":3}}},"wgStableRevisionId":null,"wgCategoryTreePageCategoryOptions":"{\"mode\":0,\"hideprefix\":20,\"showcount\":true,\"namespaces\":false}","wgNoticeProject":"wikipedia","wgCentralNoticeCategoriesUsingLegacy":["Fundraising","fundraising"],"wgCentralAuthMobileDomain":false,"wgWikibaseItemId":"Q1164769","wgVisualEditorToolbarScrollOffset":0}); /* @nomin */mw.loader.implement("user.options",function($,jQuery){mw.user.options.set({"variant":"en"});});mw.loader.implement("user.tokens",function ( $, jQuery ) {
 mw.user.tokens.set({"editToken":"+\\","patrolToken":"+\\","watchToken":"+\\","csrfToken":"+\\"}); /* @nomin */ ;
@@ -1197,6 +1202,41 @@ mw.config.set({"wgBackendResponseTime":92,"wgHostname":"mw1213"}); /* @nomin */
 } );</script>
 	
 <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script type="text/javascript" src="js/jquery.visible.min.js"></script>
 <script type="text/javascript" src="js/myscript.js"></script>
+<script src="js/classie.js"></script>
+<script src="js/notificationFx.js"></script>
+<script>
+var adder = function(obj) {
+    
+        setTimeout( function() {
+            var displayContent = "<p>";
+            if(obj.type === 'image'){
+                displayContent += "<a target='_blank' href='"+obj.link+"'><h2>"+obj.title+"</h2></a>";
+                displayContent += "<p>"+obj.description+"</p>";
+                displayContent += "<img width='450px' src='"+obj.imgUrl+"'>";
+            }
+            else if(obj.type === 'video'){
+                displayContent += "<p>"+obj.description+"</p>";
+                displayContent += obj.imgUrl;
+            }
+            displayContent += "</p>";
+            // create the notification
+            var notification = new NotificationFx({
+                message : displayContent,
+                layout : 'growl',
+                effect : 'scale',
+                type : 'notice', // notice, warning, error or success
+                onClose : function() {
+                        bttn.disabled = false;
+                }
+            });
+
+            // show the notification
+            notification.show();
+
+        }, 1200 );
+};
+</script>
 <div class="suggestions" style="display: none; font-size: 13px;"><div class="suggestions-results"></div><div class="suggestions-special"></div></div></body></html>

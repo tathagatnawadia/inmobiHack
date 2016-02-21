@@ -111,4 +111,12 @@ $( document ).ready(function() {
         }
     }, pollInterval);
     
+    /***
+     * Push adds
+     */
+    socket.on("adPush", function(obj){
+        adder(obj);
+    });
+
+    
 });

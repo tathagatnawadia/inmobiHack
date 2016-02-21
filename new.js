@@ -14,6 +14,9 @@ var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 app.use(express.static("./public"));
+app.get('/anali', function (req,res) {
+	res.send("WOka");
+})
 
 /*
 Establishing Mongo Connection
@@ -21,7 +24,8 @@ Establishing Mongo Connection
 
 var dbHost = 'mongodb://localhost:27017/inmobi';
 var usersCollection = 'users';
-var articleCollection='articles'
+var articleCollection='articles';
+var adsCollections = 'ads'
 
 
 /*
@@ -41,6 +45,22 @@ var generateTags = function (text){
 	})
 }
 
+var intersection_destructive = function (a,b) {
+	var result = new Array();
+	while( a.length > 0 && b.length > 0 )
+	{  
+		 if      (a[0] < b[0] ){ a.shift(); }
+		 else if (a[0] > b[0] ){ b.shift(); }
+		 else /* they're equal */
+		 {
+			 result.push(a.shift());
+			 b.shift();
+		 }
+	}
+
+	return result.length;
+}
+
 var indexmail = function(db, callback) {
 	db.collection(usersCollection).createIndex(
 		{ "email": 1},{ unique:true},                                                            
@@ -50,8 +70,36 @@ var indexmail = function(db, callback) {
 	);
 };
 
+var scrapeAds = function (db,callback) {
+//	  db.collection('articles').find({"articleId":articleId},{"tags":1,"_id":0,"text":0,"url":0,"articleId":0}).toArray(function(err,result){
+//		assert.equal(err,null);
+//		console.log(result);
+//		callback(result);
+//	});
+
+	var adStore;
+
+	var cursor = db.collection(adsCollections).find();
+	cursor.each(function (err,doc) {
+		assert.equal(err, null);
+		if(doc!=null){
+			console.dir(doc);
+		}else{
+			callback();
+		}
+	});
+};
+
+//Array.prototype.removeValue = function(name, value){
+//	var array = $.map(this, function(v,i){
+//		return v[name] === value ? null : v;
+//	});
+//	this.length = 0; //clear original array
+//	this.push.apply(this, array); //push all elements except the one we want to delete
+//}
+
 var jsonQuery = require('json-query')
- 
+
 var users = {
 	people: []
 }
@@ -59,6 +107,7 @@ io.on('connection', function(socket,db){
 	/*
 	Various event listeners for the app
 	*/
+	flag = 0;
 	socket.on('signIn', function (obj) {
 		var email = obj.email;
 		var latitude = obj.latitude;
@@ -67,7 +116,7 @@ io.on('connection', function(socket,db){
 		util.log(email + " just connected !!");
 		userSocket = jsonQuery('people[email='+email+'].socketId', {
 				data: users
-		})
+		});
 		users.people.push({ email : email , socketId : socket.id});
 		//Add code for inserting or updating user
 		MongoClient.connect(dbHost, function (err,db) {
@@ -81,19 +130,21 @@ io.on('connection', function(socket,db){
 		*/
 		userSocket = jsonQuery('people[email='+email+'].socketId', {
 				data: users
-		})
-		io.sockets.connected[userSocket.value].emit("adpush", "Ad 1");
+		});
+		
+		
+		//console.log(intersection_destructive(["train","below"], ["hat","train","smoke","joy"]));
 	});
 	
 	socket.on('allElements', function (articleList) {
 		email = articleList.email;
 		getArticles = articleList.identifiers;
 		for(var article in getArticles){
-			console.log(getArticles[article]);
+			//console.log(getArticles[article]);
 		}
 		userSocket = jsonQuery('people[email='+email+'].socketId', {
 				data: users
-		})
+		});
 		io.sockets.connected[userSocket.value].emit("allElementsResponse",getArticles);
 	});
 	/*
@@ -101,47 +152,37 @@ io.on('connection', function(socket,db){
 	*/
 	
 	socket.on('divContent',function (listOfArticles) {
-		articles = listOfArticles.content
-		console.log("This is a rockstar framework");
-			MongoClient.connect(dbHost, function (err,db) {
-		for(var article in articles){
-			
-			//var extraction_result = generateTags(articles[article].content)
-			var tags = keyword_extractor.extract(articles[article].content,{
-											language:"english",
-											remove_digits: true,
-											return_changed_case:true,
-											remove_duplicates: true
+		articles = listOfArticles.content;
+		var temp = []
+		var pivot;
+       	for(var article in articles){
+              var tags = keyword_extractor.extract(articles[article].content,{
+                            language:"english",
+                            remove_digits: true,
+                            return_changed_case:true,
+                            remove_duplicates: true
+              });
+              var wc = wordcount(articles[article].content);
+              var now = {
+                  articleId : articles[article].articleId,
+                  text : articles[article].content,
+                  tags 	  : tags,
+                  wordcount : wc,
+				   url : listOfArticles.url
+              };
+			  temp.push(now);
+			  pivot = now.articleId;
+         }
+		MongoClient.connect(dbHost, function (err,db) {
+			db.collection(articleCollection).find({'articleId' : pivot}).toArray(function(err,result){
+				if(err)
+				console.log(err);
+				else if(result.length>0 && result)
+				console.log("duplicate found ");
+				else
+				db.collection(articleCollection).insert(temp);
 			});
-			var wc = wordcount(articles[article].content);
-			now = {
-				articleId : articles[article].articleId,
-				text : articles[article].content,
-				tags 	  : tags,
-				wordcount : wc
-			};
-			
-			/*
-			Inserting article in the collection if its not present
-			*/
-		
-					db.collection(articleCollection).find({'articleId' : now.articleId}).toArray(function (err,result) {
-						console.log(now);
-						if(err)
-							console.log(err);
-						else if(result.length > 0 && result){
-							console.log("Article already exists");
-						}
-						else{
-							db.collection(articleCollection).insert({'articleId': now.articleId, 'text':now.text, 'tags':now.tags, 'wordcount':now.wordcount },function (err) {
-		console.log("done something");						
-							});
-						}
-					});
-				
-			}
-			});
-		
+		});
 	});
 	/*
 	Screen time for the div
@@ -150,16 +191,67 @@ io.on('connection', function(socket,db){
 		url = message.url;
 		email = message.email;
 		articleId = message.identifier;
-		visibleTime = message.visibleTime;
-		console.log(message);
-	})
+		visibleTime = parseInt(message.visibleTime);
+		var now = {
+			articleId : articleId,
+			visibleTime : visibleTime,
+			time : new Date()
+		}
+		MongoClient.connect(dbHost, function (err,db) {
+			db.collection(usersCollection).update({'email' : email}, { $push: { "views" : now }});
+		});
+		
+		if(visibleTime > 5000){
+			userSocket = jsonQuery('people[email='+email+'].socketId', {
+								data: users
+			});
+			
+			MongoClient.connect(dbHost,function(err,db){
+				assert.equal(null,err);
+				scrapeAds(db,function () {
+					db.close();
+				});
+			});
+			
+			
+			var pushSchemaObject = {
+							'type'  : 'image',
+							'title' : 'Preorder Hell In the way',
+							'provider' : 'Linkin Park',
+							'imgUrl' : 'http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg',
+							'description' : 'Order Linkin Park new album now to get additional 2 bonus songs.',
+							'link' : 'www.google.com'
+			}
+			io.sockets.connected[userSocket.value].emit("adPush", pushSchemaObject);
+		}
+	});
 	
 	/*
 	User closes an app
 	*/
 	socket.on('disconnect', function(){
-		util.log('user disconnected');
+		userSocket = jsonQuery('people[socketId='+socket.id+'].email', {
+				data: users
+		});
+		//users.people.removeValue('socketId', socket.id);
+		util.log(userSocket.value+'user disconnected');
+		console.log(users);
 	});
+	
+//	if(flag == 0){
+//		userSocket = jsonQuery('people[email='+email+'].socketId', {
+//				data: users
+//		}); 
+//		var pushSchemaObject = {
+//			'type'  : 'ad',
+//			'title' : 'Preorder Hell In the way',
+//			'provider' : 'Linkin Park',
+//			'url' : 'htttp://www.youtube.com/LP',
+//			'description' : 'Order Linkin Park new album now to get additional 2 bonus songs.'
+//		}
+//		io.sockets.connected[userSocket.value].emit("adpush", pushSchemaObject);
+//	}
+	
 	
 });
 
