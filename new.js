@@ -69,24 +69,36 @@ var indexmail = function(db, callback) {
 		}
 	);
 };
-
 var scrapeAds = function (db,callback) {
-//	  db.collection('articles').find({"articleId":articleId},{"tags":1,"_id":0,"text":0,"url":0,"articleId":0}).toArray(function(err,result){
-//		assert.equal(err,null);
-//		console.log(result);
-//		callback(result);
-//	});
-
 	var adStore;
-
+	var random = Math.floor((Math.random() * 10) + 1);
 	var cursor = db.collection(adsCollections).find();
+	var i = 0;
 	cursor.each(function (err,doc) {
 		assert.equal(err, null);
 		if(doc!=null){
-			console.dir(doc);
+			
 		}else{
 			callback();
 		}
+		if(random == i){
+			console.dir(doc);	
+			
+			
+			var pushSchemaObject = {
+							'type'  : doc.type,
+							'title' : doc.title,
+							'provider' : doc.title,
+							'imgUrl' : doc.imgUrl,
+							'description' : doc.description,
+							'link' : doc.link
+			}
+			io.sockets.connected[userSocket.value].emit("adPush", pushSchemaObject);
+			
+			
+				
+		}
+		i = i+1;
 	});
 };
 
@@ -212,17 +224,7 @@ io.on('connection', function(socket,db){
 					db.close();
 				});
 			});
-			
-			
-			var pushSchemaObject = {
-							'type'  : 'image',
-							'title' : 'Preorder Hell In the way',
-							'provider' : 'Linkin Park',
-							'imgUrl' : 'http://www.planwallpaper.com/static/images/Winter-Tiger-Wild-Cat-Images.jpg',
-							'description' : 'Order Linkin Park new album now to get additional 2 bonus songs.',
-							'link' : 'www.google.com'
-			}
-			io.sockets.connected[userSocket.value].emit("adPush", pushSchemaObject);
+	
 		}
 	});
 	
